@@ -35,7 +35,8 @@ start() ->
     end.
 
 loop(Socket) ->
-    SendPacket = <<"AtomVM rocks!">>,
+    % SendPacket = <<"AtomVM rocks!">>,
+    SendPacket = <<"Eighty-five characters should be enough to generate a refc binary, don't you think?\r\n">>,
     case gen_tcp:send(Socket, SendPacket) of
         ok ->
             io:format("Sent ~p to ~p\n", [SendPacket, peer_address(Socket)]),
@@ -45,7 +46,7 @@ loop(Socket) ->
                     ok;
                 {tcp, _Socket, ReceivedPacket} ->
                     io:format("Received ~p from ~p~n", [ReceivedPacket, peer_address(Socket)]),
-                    timer:sleep(1000),
+%                   timer:sleep(100),
                     loop(Socket)
             end;
         Error ->

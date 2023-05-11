@@ -25,7 +25,7 @@
 start() ->
     ok = maybe_start_network(atomvm:platform()),
     Port = maps:get(port, config:get()),
-    case gen_tcp:listen(Port, []) of
+    case gen_tcp:listen(Port, [binary]) of
         {ok, ListenSocket} ->
             io:format("Listening on ~p.~n", [local_address(ListenSocket)]),
             spawn(fun() -> accept(ListenSocket) end),
