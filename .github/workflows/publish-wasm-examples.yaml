@@ -1,0 +1,59 @@
+#
+#  Copyright 2023 Paul Guyot <pguyot@kallisys.net>
+#
+#  SPDX-License-Identifier: Apache-2.0 OR LGPL-2.1-or-later
+#
+
+name: "Publish Wasm Examples"
+
+on: ["push"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  publish_wasm:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    container: erlang:26
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      - name: Build Wasm example
+        run: |
+          # build avm
+          cd demos/supervised_discs
+          rebar3 packbeam -i -p -s init
+          # copy it to html/bin
+          cp _build/default/lib/supervised_discs.avm html/bin/
+          mkdir tmp
+          cd tmp
+          # fetch AtomVM & atomvmlib.avm
+          wget https://github.com/pguyot/AtomVM/releases/download/27e4ee3/atomvm-js-web.zip
+          unzip atomvm-js-web.zip
+          cp src/AtomVM.js ../html/bin/
+          cp src/AtomVM.worker.js ../html/bin/
+          cp src/AtomVM.wasm ../html/bin/
+          wget https://github.com/pguyot/AtomVM/releases/download/27e4ee3/atomvm-and-test-modules.zip
+          unzip atomvm-and-test-modules.zip
+          cp libs/atomvmlib.avm ../html/bin/
+          # Copy service worker
+          wget "https://github.com/gzuidhof/coi-serviceworker/blob/c0ad78b093bac08d89e1aee8194320f4c099dc2d/coi-serviceworker.min.js?raw=true"
+          cp "coi-serviceworker.min.js?raw=true" ../html/coi-serviceworker.min.js
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: demos/supervised_discs/html/
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
